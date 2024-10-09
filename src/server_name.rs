@@ -474,7 +474,12 @@ pub struct Ipv6Addr([u8; 16]);
 impl TryFrom<&str> for Ipv6Addr {
     type Error = AddrParseError;
 
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
+    fn try_from(mut value: &str) -> Result<Self, Self::Error> {
+        value = if value.starts_with('[') && value.ends_with(']') {
+            &value[1..value.len() - 1]
+        } else {
+            value
+        };
         Parser::new(value.as_bytes()).parse_with(|p| p.read_ipv6_addr(), AddrKind::Ipv6)
     }
 }
@@ -975,6 +980,13 @@ mod tests {
             [
                 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
                 0xff, 0xff,
+            ],
+        ),
+        ipv6_address(
+            "[2001:4860:4860::8888]",
+            [
+                0x20, 0x01, 0x48, 0x60, 0x48, 0x60, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x88, 0x88,
             ],
         ),
         // Wrong hexadecimal characters on different positions
